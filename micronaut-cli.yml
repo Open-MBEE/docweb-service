@@ -1,0 +1,5 @@
+profile: service
+defaultPackage: gov.nasa.jpl.mbee
+---
+testFramework: junit
+sourceLanguage: java
