@@ -1,5 +1,6 @@
 package gov.nasa.jpl.mbee.services;
 
+import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import gov.nasa.jpl.mbee.domains.PresentationElement;
 import java.nio.charset.StandardCharsets;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.openmbee.mms.client.ApiClient;
 import org.openmbee.mms.client.ApiException;
 import org.openmbee.mms.client.api.ElementApi;
@@ -50,14 +52,14 @@ public class Utils {
         return result;
     }
 
-    public static ApiClient createClient(String ticket, Optional<String> auth, String server) {
+    public static ApiClient createClient(Optional<String> ticket, Optional<String> auth, String server) {
         ApiClient client = new ApiClient();
         client.setConnectTimeout(300000);
         client.setReadTimeout(600000);
         client.setWriteTimeout(600000);
         Map<String, String> basic = getBasicAuth(auth.orElse(null));
-        if (ticket != null) {
-            client.setApiKey(ticket);
+        if (ticket.isPresent()) {
+            client.setApiKey(ticket.get());
         } else if (basic != null) {
             client.setPassword(basic.get("password"));
             client.setUsername(basic.get("username"));
@@ -69,7 +71,7 @@ public class Utils {
     public static Element getElement(ElementApi apiInstance, String projectId, String refId, String id,
         String commitId) throws ApiException {
 
-        return apiInstance.getElement(projectId,refId,id,2, true, commitId).getElements().get(0);
+        return apiInstance.getElement(projectId, refId, id, null, null, commitId).getElements().get(0);
     }
 
     public static List<Element> getElements(ElementApi apiInstance, String projectId, String refId, Set<String> ids, String commitId) throws ApiException {
@@ -137,6 +139,124 @@ public class Utils {
         String peType = Utils.getPresentationElementType(pe);
         responsePE.setType(peType);
         return responsePE;
+    }
+
+    public static Element createInstanceFromPe(PresentationElement pe, String projectId) {
+        String id = pe.getId() == null ? "_hidden_" + createId() + "_pei" : pe.getId();
+        pe.setType(pe.getType() == null ? "Paragraph" : pe.getType());
+        pe.setName(pe.getName() == null ? "" : pe.getName());
+        pe.setContent(pe.getContent() == null ? "" : pe.getContent());
+        pe.setId(id);
+
+        Map<String, Object> valueSpec = createValueSpec();
+        valueSpec.put("ownerId", id);
+        if ("Section".equals(pe.getType())) {
+            valueSpec.put("type", "Expression");
+            valueSpec.put("operand", new ArrayList());
+        } else {
+            valueSpec.put("type", "LiteralString");
+            valueSpec.put("value", createSpecForPe(pe, id));
+        }
+
+        List<String> classifierIds = new ArrayList<>();
+        classifierIds.add(getClassifierId(pe));
+
+        Element e = new Element();
+        e.put("appliedStereotypeInstanceId", null);
+        e.put("classifierIds", classifierIds);
+        e.put("clientDependencyIds", new ArrayList());
+        e.put("deploymentIds", new ArrayList());
+        e.put("documentation", pe.getContent());
+        e.put("mdExtensionIds", new ArrayList());
+        e.put("name", pe.getName());
+        e.put("nameExpression", null);
+        e.put("ownerId", "view_instances_bin_" + projectId);
+        e.put("slotIds", new ArrayList());
+        e.put("specification", valueSpec);
+        e.put("stereotypedElementId", null);
+        e.put("supplierDependencyIds", new ArrayList());
+        e.put("syncElementId", null);
+        e.put("templateParameterId", null);
+        e.put("type", "InstanceSpecification");
+        e.put("visibility", "public");
+        e.put("_appliedStereotypeIds", new ArrayList());
+        e.put("id", id);
+
+        return e;
+    }
+
+    public static String createSpecForPe(PresentationElement pe, String instanceId) {
+        Map<String, Object> spec = new HashMap<>();
+        spec.put("type", getJsonType(pe));
+        spec.put("sourceType", "reference");
+        spec.put("source", instanceId);
+        spec.put("sourceProperty", "documentation");
+        Gson gson = new Gson();
+        return gson.toJson(spec);
+    }
+
+    public static String getJsonType(PresentationElement pe) {
+        String t = pe.getType();
+        if ("Paragraph".equals(t) || "Comment".equals(t) || "Equation".equals(t)) {
+            return t;
+        }
+        return t + "T";
+    }
+
+    public static String getClassifierId(PresentationElement pe) {
+        String t = pe.getType();
+        switch (t) {
+            case "Image":
+                return Image_ID;
+            case "Table":
+                return Table_ID;
+            case "Equation":
+                return Equation_ID;
+            case "List":
+                return List_ID;
+            case "Section":
+                return Section_ID;
+            case "Paragraph":
+            case "Comment":
+            default:
+                return Paragraph_ID;
+        }
+    }
+
+    public static Map<String, Object> createOperandForInstance(Element instance) {
+        Map<String, Object> e = createValueSpec();
+        e.put("type", "InstanceValue");
+        e.put("instanceId", instance.get("id"));
+        return e;
+    }
+
+    public static Map<String, Object> createExpression() {
+        Map<String, Object> e = createValueSpec();
+        e.put("type", "Expression");
+        e.put("operand", new ArrayList());
+        return e;
+    }
+
+    public static Map<String, Object> createValueSpec() {
+        Map<String, Object> e = new HashMap<>();
+        e.put("appliedStereotypeInstanceId", null);
+        e.put("clientDependencyIds", new ArrayList());
+        e.put("documentation", "");
+        e.put("mdExtensionIds", new ArrayList());
+        e.put("name", "");
+        e.put("nameExpression", null);
+        e.put("supplierDependencyIds", new ArrayList());
+        e.put("syncElementId", null);
+        e.put("templateParameterId", null);
+        e.put("typeId", null);
+        e.put("visibility", "public");
+        e.put("_appliedStereotypeIds", new ArrayList());
+        e.put("id", createId());
+        return e;
+    }
+
+    public static String createId() {
+        return "MMS_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString();
     }
 
 //  PE template
