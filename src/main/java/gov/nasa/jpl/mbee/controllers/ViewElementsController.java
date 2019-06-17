@@ -83,7 +83,7 @@ public class ViewElementsController {
     }
 
     @Put("/presentations")
-    public HttpResponse<?> putPresentationElement(@Body PresentationElement request,
+    public HttpResponse<?> putPresentationElement(@Body Presentation request,
         @Header("Authorization") Optional<String> auth, @QueryValue("index") Optional<Integer> index,
         @QueryValue("alf_ticket") Optional<String> ticket,
         String projectId, String refId, String viewId) {
@@ -92,27 +92,30 @@ public class ViewElementsController {
             ApiClient client = Utils.createClient(ticket, auth, url);
             ElementApi apiInstance = new ElementApi();
             apiInstance.setApiClient(client);
-
             Element view = Utils.getElement(apiInstance, projectId, refId, viewId, null);
-            Element pe = Utils.createInstanceFromPe(request, projectId);
-            Map<String, Object> operand = Utils.createOperandForInstance(pe);
-            if (view.get("_contents") != null) {
-                operand.put("ownerId", ((Map)view.get("_contents")).get("id"));
-                List<Map> operands = (List<Map>)((Map)view.get("_contents")).get("operand");
-                if (index.isPresent() && index.get() < operands.size() && index.get() > -1) {
-                    operands.add(index.get(), operand);
-                } else {
-                    operands.add(operand);
+            int i = 0;
+            Elements post = new Elements();
+            for (PresentationElement req: request.getElements()) {
+                Element pe = Utils.createInstanceFromPe(req, projectId);
+                post.addElementsItem(pe);
+                Map<String, Object> operand = Utils.createOperandForInstance(pe);
+                if (view.get("_contents") != null) {
+                    operand.put("ownerId", ((Map) view.get("_contents")).get("id"));
+                    List<Map> operands = (List<Map>) ((Map) view.get("_contents")).get("operand");
+                    if (index.isPresent() && index.get() < operands.size() && index.get() > -1) {
+                        operands.add(index.get() + i, operand);
+                    } else {
+                        operands.add(operand);
+                    }
                 }
+                req.setId((String)pe.get("id"));
+                i++;
             }
             Element postView = new Element();
             postView.put("id", view.get("id"));
             postView.put("_contents", view.get("_contents"));
-            Elements post = new Elements();
             post.addElementsItem(postView);
-            post.addElementsItem(pe);
             RejectableElements re = apiInstance.postElements(projectId, refId, post);
-            request.setId((String)pe.get("id"));
         } catch (Exception e) {
             logger.error("Failed: ", e);
             return HttpResponse.badRequest();
