@@ -1,6 +1,5 @@
 package gov.nasa.jpl.mbee.controllers;
 
-import com.google.gson.internal.LinkedTreeMap;
 import gov.nasa.jpl.mbee.domains.Presentation;
 import gov.nasa.jpl.mbee.domains.PresentationElement;
 import gov.nasa.jpl.mbee.services.Utils;
@@ -9,6 +8,7 @@ import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MutableHttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Delete;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Header;
 import io.micronaut.http.annotation.Patch;
@@ -16,11 +16,10 @@ import io.micronaut.http.annotation.Put;
 import io.micronaut.http.annotation.QueryValue;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openmbee.mms.client.ApiClient;
@@ -47,25 +46,21 @@ public class ViewElementsController {
             @QueryValue("alf_ticket") Optional<String> ticket) {
 
 //    Get all presentation elements within view
-        ApiClient client;
-        ElementApi apiInstance;
         Map<String, Object> response = new HashMap<>();
 
         try {
-            client = Utils.createClient(ticket, auth, url);
-            apiInstance = new ElementApi();
+            ApiClient client = Utils.createClient(ticket, auth, url);
+            ElementApi apiInstance = new ElementApi();
             apiInstance.setApiClient(client);
-            Element view = Utils.getElement(apiInstance, projectId, refId, viewId, null);
 
-//    TODO make util method -  Get child pe ids (need to change to array so it's in order)
-            Set<String> peIds = new HashSet<String>();
-            LinkedTreeMap contents = (LinkedTreeMap) view.get("_contents");
-            ArrayList<Map> pes = (ArrayList) contents.get("operand");
+            Element view = Utils.getElement(apiInstance, projectId, refId, viewId, null);
+            List<String> peIds = new ArrayList<>();
+            Map contents = (Map) view.get("_contents");
+            List<Map> pes = (List) contents.get("operand");
             for (Map pe: pes) {
                 peIds.add((String) pe.get("instanceId"));
             }
             List<Element> pedata = Utils.getElements(apiInstance, projectId, refId, peIds, null);
-
             List<PresentationElement> responseList = new ArrayList<>();
             PresentationElement responsePE;
             for (Element element: pedata) {
@@ -92,6 +87,7 @@ public class ViewElementsController {
             ApiClient client = Utils.createClient(ticket, auth, url);
             ElementApi apiInstance = new ElementApi();
             apiInstance.setApiClient(client);
+
             Element view = Utils.getElement(apiInstance, projectId, refId, viewId, null);
             int i = 0;
             Elements post = new Elements();
@@ -124,25 +120,82 @@ public class ViewElementsController {
     }
 
     @Patch("/presentations/{presentationId}")
-    public HttpResponse<?> patchPresentationElement(@Body Presentation request,
-        @Header("Authorization") Optional<String> auth,
-        String projectId, String refId, String presentationId) {
+    public HttpResponse<?> patchPresentationElement(@Header("Authorization") Optional<String> auth,
+        @QueryValue("alf_ticket") Optional<String> ticket,
+        @QueryValue("index") Integer index,
+        String projectId, String refId, String viewId, String presentationId) {
 
-        ApiClient client;
-        ElementApi apiInstance;
         Map<String, Object> response = new HashMap<>();
-
         try {
-            client = Utils.createClient(null, auth, url);
-            apiInstance = new ElementApi();
+            ApiClient client = Utils.createClient(ticket, auth, url);
+            ElementApi apiInstance = new ElementApi();
             apiInstance.setApiClient(client);
 
-            //    updates index ofPresentation Element in view
+            Elements post = new Elements();
+            Element view = Utils.getElement(apiInstance, projectId, refId, viewId, null);
+            List<Map> operands = (List<Map>) ((Map) view.get("_contents")).get("operand");
+
+            if (index < operands.size() && index > -1) {
+                Map peToAdd = new HashMap();
+                for (Iterator<Map> iterator = operands.iterator(); iterator.hasNext();) {
+                    Map operand = iterator.next();
+                    if (presentationId.equals(operand.get("instanceId")) && operands.indexOf(operand) != index) {
+                        peToAdd = operand;
+                        iterator.remove();
+                        break;
+                    }
+                }
+                if (!peToAdd.isEmpty()) {
+                    operands.add(index, peToAdd);
+                }
+                Element postView = new Element();
+                postView.put("id", view.get("id"));
+                postView.put("_contents", view.get("_contents"));
+                post.addElementsItem(postView);
+                RejectableElements re = apiInstance.postElements(projectId, refId, post);
+            }
         } catch (Exception e) {
             logger.error("Failed: ", e);
             return HttpResponse.badRequest();
         }
         response.put("status", "ok");
         return HttpResponse.ok(response);
+    }
+
+    @Delete("/presentations/{presentationId}")
+    public HttpResponse<?> deletePresentationElementfromView(@Header("Authorization") Optional<String> auth,
+        @QueryValue("alf_ticket") Optional<String> ticket,
+        String projectId, String refId, String viewId, String presentationId) {
+
+        Map<String, Object> response = new HashMap<>();
+        try {
+            ApiClient client = Utils.createClient(ticket, auth, url);
+            ElementApi apiInstance = new ElementApi();
+            apiInstance.setApiClient(client);
+
+            Elements post = new Elements();
+            Element view = Utils.getElement(apiInstance, projectId, refId, viewId, null);
+            List<Map> operands = (List<Map>) ((Map) view.get("_contents")).get("operand");
+            //   find pe in view operand and remove
+            //   post view updates
+            for (Iterator<Map> iterator = operands.iterator(); iterator.hasNext();) {
+                Map operand = iterator.next();
+                if (presentationId.equals(operand.get("instanceId"))) {
+                    iterator.remove();
+                    break;
+                }
+            }
+            Element postView = new Element();
+            postView.put("id", view.get("id"));
+            postView.put("_contents", view.get("_contents"));
+            post.addElementsItem(postView);
+            RejectableElements re = apiInstance.postElements(projectId, refId, post);
+        } catch (Exception e) {
+            logger.error("Failed: ", e);
+            return HttpResponse.badRequest();
+        }
+        response.put("status", "ok");
+        return HttpResponse.ok(response);
+
     }
 }

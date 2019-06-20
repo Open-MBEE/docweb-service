@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import org.openmbee.mms.client.ApiClient;
 import org.openmbee.mms.client.ApiException;
@@ -74,7 +73,7 @@ public class Utils {
         return apiInstance.getElement(projectId, refId, id, null, null, commitId).getElements().get(0);
     }
 
-    public static List<Element> getElements(ElementApi apiInstance, String projectId, String refId, Set<String> ids, String commitId) throws ApiException {
+    public static List<Element> getElements(ElementApi apiInstance, String projectId, String refId, List<String> ids, String commitId) throws ApiException {
         Elements body = new Elements();
         for (String id: ids) {
             Element a = new Element();
@@ -104,11 +103,9 @@ public class Utils {
         if (instanceSpec == null) {
             return null;
         }
+
         String instanceType = (String) instanceSpec.get("type");
-
         if ( instanceType.equals("LiteralString") ) { // If it is a Opaque List, Paragraph, Table, Image, List:
-            Object jsonString = instanceSpec.get("value");
-
             if (isPeByType((HashMap) instance, Paragraph_ID)) {
                 return "Paragraph";
             } else if (isPeByType((HashMap)instance, Image_ID)) {
