@@ -1,25 +1,19 @@
 package gov.nasa.jpl.mbee.domains;
 
+import java.util.List;
+
 /**
  * @author shakeh
  */
 public class Presentation {
 
-    private String ticket;
+    private List<PresentationElement> elements;
 
-    private String presentation_id;
-
-    public String getTicket() { return ticket; }
-
-    public void setTicket(String ticket) {
-        this.ticket = ticket;
+    public List<PresentationElement> getElements() {
+        return elements;
     }
 
-    public String getPresentation_id() {
-        return presentation_id;
-    }
-
-    public void setPresentation_id(String presentation_id) {
-        this.presentation_id = presentation_id;
+    public void setElements(List<PresentationElement> elements) {
+        this.elements = elements;
     }
 }

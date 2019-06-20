@@ -12,6 +12,7 @@ import io.micronaut.http.annotation.Header;
 import io.micronaut.http.annotation.Patch;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Put;
+import io.micronaut.http.annotation.QueryValue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +28,7 @@ import org.openmbee.mms.client.model.Element;
 @Controller("/projects/{projectId}/refs/{refId}")
 public class PresentationController {
 
-    @Value("my.url")
+    @Value("${mms.url}")
     String url;
 
     private static Logger logger = LogManager.getLogger(PresentationController.class);
@@ -35,14 +36,15 @@ public class PresentationController {
 
     @Get("/presentation/{presentationId}")
     public HttpResponse<?> getPresentationElement(@Header("Authorization") Optional<String> auth,
-        String projectId, String refId, String presentationId) {
+        String projectId, String refId, String presentationId,
+            @QueryValue("alf_ticket") Optional<String> ticket) {
 
         ApiClient client;
         ElementApi apiInstance;
         Map<String, Object> response = new HashMap<>();
 
         try {
-            client = Utils.createClient(null, auth, url);
+            client = Utils.createClient(ticket, auth, url);
             apiInstance = new ElementApi();
             apiInstance.setApiClient(client);
             Element pe = Utils.getElement(apiInstance, projectId, refId, presentationId, null);
