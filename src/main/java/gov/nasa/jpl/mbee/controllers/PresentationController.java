@@ -9,10 +9,9 @@ import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Header;
-import io.micronaut.http.annotation.Patch;
 import io.micronaut.http.annotation.Post;
-import io.micronaut.http.annotation.Put;
 import io.micronaut.http.annotation.QueryValue;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -21,6 +20,8 @@ import org.apache.logging.log4j.Logger;
 import org.openmbee.mms.client.ApiClient;
 import org.openmbee.mms.client.api.ElementApi;
 import org.openmbee.mms.client.model.Element;
+import org.openmbee.mms.client.model.Elements;
+import org.openmbee.mms.client.model.RejectableElements;
 
 /**
  * @author shakeh
@@ -39,22 +40,19 @@ public class PresentationController {
         String projectId, String refId, String presentationId,
             @QueryValue("alf_ticket") Optional<String> ticket) {
 
-        ApiClient client;
-        ElementApi apiInstance;
         Map<String, Object> response = new HashMap<>();
-
         try {
-            client = Utils.createClient(ticket, auth, url);
-            apiInstance = new ElementApi();
+            ApiClient client = Utils.createClient(ticket, auth, url);
+            ElementApi apiInstance = new ElementApi();
             apiInstance.setApiClient(client);
             Element pe = Utils.getElement(apiInstance, projectId, refId, presentationId, null);
             PresentationElement responsePE = Utils.buildResponsePe(pe);
             response.put("element", responsePE);
+            response.put("status", "ok");
         } catch (Exception e) {
             logger.error("Failed: ", e);
             return HttpResponse.badRequest();
         }
-        response.put("status", "ok");
         return HttpResponse.ok(response);
     }
 
@@ -62,24 +60,43 @@ public class PresentationController {
     @Post("/presentations/{presentationId}")
     public HttpResponse<?> postPresentationElement(@Body Presentation request,
         @Header("Authorization") Optional<String> auth,
+        @QueryValue("alf_ticket") Optional<String> ticket,
         String projectId, String refId, String presentationId) {
 
-        ApiClient client;
-        ElementApi apiInstance;
-        Map<String, Object> response = new HashMap<>();
-
         try {
-            client = Utils.createClient(null, auth, url);
-            apiInstance = new ElementApi();
+            ApiClient client = Utils.createClient(ticket, auth, url);
+            ElementApi apiInstance = new ElementApi();
             apiInstance.setApiClient(client);
 
+            PresentationElement pe = request.getElements().get(0);
+            Elements post = new Elements();
+            Element e = new Element();
+            e.put("id", presentationId);
+            if (pe.getName() != null) {
+                e.put("name", pe.getName());
+            }
+            if (pe.getContent() != null) {
+                e.put("documentation", pe.getContent());
+            }
+            if (pe.getType() != null) {
+                Map<String, Object> valueSpec = new HashMap<>();
+                if ("Section".equals(pe.getType())) {
+                    valueSpec.put("type", "Expression");
+                    valueSpec.put("operand", new ArrayList());
+                } else {
+                    valueSpec.put("type", "LiteralString");
+                    valueSpec.put("value", Utils.createSpecForPe(pe, presentationId));
+                }
+                e.put("specification", valueSpec);
+            }
+            post.addElementsItem(e) ;
             //    updates Presentation Element with new model
+            RejectableElements re = apiInstance.postElements(projectId, refId, post);
         } catch (Exception e) {
             logger.error("Failed: ", e);
             return HttpResponse.badRequest();
         }
-        response.put("status", "ok");
-        return HttpResponse.ok(response);
+        return HttpResponse.ok(request);
     }
 
 }
