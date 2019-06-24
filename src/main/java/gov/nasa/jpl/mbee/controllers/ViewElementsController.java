@@ -73,7 +73,6 @@ public class ViewElementsController {
             logger.error("Failed: ", e);
             return HttpResponse.badRequest();
         }
-        response.put("status", "ok");
         return HttpResponse.ok(response);
     }
 
@@ -158,7 +157,6 @@ public class ViewElementsController {
             logger.error("Failed: ", e);
             return HttpResponse.badRequest();
         }
-        response.put("status", "ok");
         return HttpResponse.ok(response);
     }
 
@@ -194,7 +192,6 @@ public class ViewElementsController {
             logger.error("Failed: ", e);
             return HttpResponse.badRequest();
         }
-        response.put("status", "ok");
         return HttpResponse.ok(response);
 
     }

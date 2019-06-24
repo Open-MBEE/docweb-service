@@ -48,7 +48,6 @@ public class PresentationController {
             Element pe = Utils.getElement(apiInstance, projectId, refId, presentationId, null);
             PresentationElement responsePE = Utils.buildResponsePe(pe);
             response.put("elements", responsePE);
-            response.put("status", "ok");
         } catch (Exception e) {
             logger.error("Failed: ", e);
             return HttpResponse.badRequest();
@@ -68,29 +67,22 @@ public class PresentationController {
             ElementApi apiInstance = new ElementApi();
             apiInstance.setApiClient(client);
 
+            //    updates Presentation Element with new model
             PresentationElement pe = request.getElements().get(0);
             Elements post = new Elements();
-            Element e = new Element();
-            e.put("id", presentationId);
-            if (pe.getName() != null) {
-                e.put("name", pe.getName());
+            pe.setId(presentationId);
+            Element e = Utils.createInstanceFromPe(pe, projectId);
+            if (pe.getName() == null ) {
+                e.remove("name");
             }
-            if (pe.getContent() != null) {
-                e.put("documentation", pe.getContent());
+            if (pe.getContent() == null) {
+                e.remove("documentation");
             }
-            if (pe.getType() != null) {
-                Map<String, Object> valueSpec = new HashMap<>();
-                if ("Section".equals(pe.getType())) {
-                    valueSpec.put("type", "Expression");
-                    valueSpec.put("operand", new ArrayList());
-                } else {
-                    valueSpec.put("type", "LiteralString");
-                    valueSpec.put("value", Utils.createSpecForPe(pe, presentationId));
-                }
-                e.put("specification", valueSpec);
+            if (pe.getType() == null) {
+                e.remove("specification");
+                e.remove("classifierIds");
             }
             post.addElementsItem(e) ;
-            //    updates Presentation Element with new model
             RejectableElements re = apiInstance.postElements(projectId, refId, post);
         } catch (Exception e) {
             logger.error("Failed: ", e);
