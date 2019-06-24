@@ -47,7 +47,7 @@ public class PresentationController {
             apiInstance.setApiClient(client);
             Element pe = Utils.getElement(apiInstance, projectId, refId, presentationId, null);
             PresentationElement responsePE = Utils.buildResponsePe(pe);
-            response.put("element", responsePE);
+            response.put("elements", responsePE);
             response.put("status", "ok");
         } catch (Exception e) {
             logger.error("Failed: ", e);
