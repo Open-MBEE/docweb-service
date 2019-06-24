@@ -27,7 +27,7 @@ public class Utils {
     public static String Paragraph_ID = "_17_0_5_1_407019f_1431903758416_800749_12055";
     public static String Image_ID = "_17_0_5_1_407019f_1431903748021_2367_12034";
     public static String Table_ID = "_17_0_5_1_407019f_1431903724067_825986_11992";
-    public static String Equation_ID = "17_0_5_1_407019f_1431905053808_352752_11992";
+    public static String Equation_ID = "_17_0_5_1_407019f_1431905053808_352752_11992";
     public static String List_ID = "_17_0_5_1_407019f_1431903739087_549326_12013";
 
     public static Map<String, String> getBasicAuth(String authorization) {
