@@ -34,6 +34,7 @@ dependencies {
     annotationProcessor "io.micronaut:micronaut-validation"
     compile "com.amazonaws:aws-lambda-java-log4j2:1.1.0"
     compile "org.openmbee.mms:mms-java-client:3.3.0"
+    compile "io.micronaut.aws:micronaut-function-aws-api-proxy"
     compile "io.micronaut:micronaut-inject"
     compile "io.micronaut:micronaut-validation"
     compile "io.micronaut:micronaut-runtime"
