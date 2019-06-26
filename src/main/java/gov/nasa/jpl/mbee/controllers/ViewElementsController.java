@@ -15,6 +15,7 @@ import io.micronaut.http.annotation.Patch;
 import io.micronaut.http.annotation.Put;
 import io.micronaut.http.annotation.QueryValue;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -60,15 +61,15 @@ public class ViewElementsController {
             for (Map pe: pes) {
                 peIds.add((String) pe.get("instanceId"));
             }
-            List<Element> pedata = Utils.getElements(apiInstance, projectId, refId, peIds, null);
-            List<PresentationElement> responseList = new ArrayList<>();
-            PresentationElement responsePE;
-            for (Element element: pedata) {
-                responsePE = Utils.buildResponsePe(element);
-                responseList.add(responsePE);
+            List<Element> peElts = Utils.getElements(apiInstance, projectId, refId, peIds, null);
+            PresentationElement[] peSortedList = new PresentationElement[peIds.size()];
+            for (Element element: peElts) {
+                PresentationElement responsePE = Utils.buildResponsePe(element);
+                int index = peIds.indexOf(responsePE.getId());
+                peSortedList[index] =responsePE;
             }
 //            response.put("view", view);
-            response.put("elements", responseList);
+            response.put("elements", peSortedList);
         } catch (Exception e) {
             logger.error("Failed: ", e);
             return HttpResponse.badRequest();
