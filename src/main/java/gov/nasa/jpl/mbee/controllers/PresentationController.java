@@ -13,6 +13,7 @@ import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.QueryValue;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
@@ -37,8 +38,8 @@ public class PresentationController {
 
     @Get("/presentation/{presentationId}")
     public HttpResponse<?> getPresentationElement(@Header("Authorization") Optional<String> auth,
-        String projectId, String refId, String presentationId,
-            @QueryValue("alf_ticket") Optional<String> ticket) {
+        @QueryValue("alf_ticket") Optional<String> ticket,
+        String projectId, String refId, String presentationId) {
 
         Map<String, Object> response = new HashMap<>();
         try {
@@ -46,7 +47,8 @@ public class PresentationController {
             ElementApi apiInstance = new ElementApi();
             apiInstance.setApiClient(client);
             Element pe = Utils.getElement(apiInstance, projectId, refId, presentationId, null);
-            PresentationElement responsePE = Utils.buildResponsePe(pe);
+            List<PresentationElement> responsePE = new ArrayList<>();
+            responsePE.add(Utils.buildResponsePe(pe));
             response.put("elements", responsePE);
         } catch (Exception e) {
             logger.error("Failed: ", e);
