@@ -35,7 +35,7 @@ import org.openmbee.mms.client.model.RejectableElements;
 @Controller("/projects/{projectId}/refs/{refId}/views/{viewId}")
 public class ViewElementsController {
 
-    @Value("${mms_url}")
+    @Value("${mms.url}")
     String url;
 
     private static Logger logger = LogManager.getLogger(PresentationController.class);
