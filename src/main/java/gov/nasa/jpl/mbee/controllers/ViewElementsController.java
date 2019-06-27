@@ -45,7 +45,7 @@ public class ViewElementsController {
     public MutableHttpResponse<Object> getPresentationElements(@Header("Authorization")
         Optional<String> auth, String projectId, String refId, String viewId,
             @QueryValue("alf_ticket") Optional<String> ticket) {
-
+        logger.info(url);
 //    Get all presentation elements within view
         Map<String, Object> response = new HashMap<>();
 
