@@ -35,7 +35,7 @@ import org.openmbee.mms.client.model.RejectableElements;
 @Controller("/projects/{projectId}/refs/{refId}/views/{viewId}")
 public class ViewElementsController {
 
-    @Value("${mms.url}")
+    @Value("${mms_url}")
     String url;
 
     private static Logger logger = LogManager.getLogger(PresentationController.class);
@@ -57,19 +57,24 @@ public class ViewElementsController {
             Element view = Utils.getElement(apiInstance, projectId, refId, viewId, null);
             List<String> peIds = new ArrayList<>();
             Map contents = (Map) view.get("_contents");
-            List<Map> pes = (List) contents.get("operand");
-            for (Map pe: pes) {
-                peIds.add((String) pe.get("instanceId"));
-            }
-            List<Element> peElts = Utils.getElements(apiInstance, projectId, refId, peIds, null);
-            PresentationElement[] peSortedList = new PresentationElement[peIds.size()];
-            for (Element element: peElts) {
-                PresentationElement responsePE = Utils.buildResponsePe(element);
-                int index = peIds.indexOf(responsePE.getId());
-                peSortedList[index] =responsePE;
-            }
+            if (contents.isEmpty()) {
+                response.put("elements", new ArrayList<>());
+            } else {
+                List<Map> pes = (List) contents.get("operand");
+                for (Map pe : pes) {
+                    peIds.add((String) pe.get("instanceId"));
+                }
+                List<Element> peElts = Utils
+                    .getElements(apiInstance, projectId, refId, peIds, null);
+                PresentationElement[] peSortedList = new PresentationElement[peIds.size()];
+                for (Element element : peElts) {
+                    PresentationElement responsePE = Utils.buildResponsePe(element);
+                    int index = peIds.indexOf(responsePE.getId());
+                    peSortedList[index] = responsePE;
+                }
 //            response.put("view", view);
-            response.put("elements", peSortedList);
+                response.put("elements", peSortedList);
+            }
         } catch (Exception e) {
             logger.error("Failed: ", e);
             return HttpResponse.badRequest();

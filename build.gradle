@@ -10,7 +10,7 @@ plugins {
 
 
 version "0.1"
-group "gov.nasa.jpl.mbee"
+group "docweb-service"
 
 repositories {
     mavenCentral()
@@ -53,6 +53,13 @@ mainClassName = "gov.nasa.jpl.mbee.Application"
 // use JUnit 5 platform
 test {
     useJUnitPlatform()
+}
+task buildZip(type: Zip) {
+    from compileJava
+    from processResources
+    into('lib') {
+        from(configurations.compileClasspath)
+    }
 }
 tasks.withType(JavaCompile){
     options.encoding = "UTF-8"
