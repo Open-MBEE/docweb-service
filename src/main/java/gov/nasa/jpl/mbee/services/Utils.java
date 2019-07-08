@@ -32,26 +32,23 @@ public class Utils {
 
     public static Map<String, String> getBasicAuth(String authorization) {
         Map<String, String> result = null;
-        try {
-            //final String authorization = httpRequest.getHeader("Authorization");
-            if (authorization != null && authorization.toLowerCase().startsWith("basic")) {
-                // Authorization: Basic base64credentials
-                String base64Credentials = authorization.substring("Basic".length()).trim();
-                byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
-                String credentials = new String(credDecoded, StandardCharsets.UTF_8);
-                // credentials = username:password
-                final String[] values = credentials.split(":", 2);
-                result = new HashMap<>();
-                result.put("username", values[0]);
-                result.put("password", values[1]);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        //final String authorization = httpRequest.getHeader("Authorization");
+        if (authorization != null && authorization.toLowerCase().startsWith("basic")) {
+            // Authorization: Basic base64credentials
+            String base64Credentials = authorization.substring("Basic".length()).trim();
+            byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+            String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+            // credentials = username:password
+            final String[] values = credentials.split(":", 2);
+            result = new HashMap<>();
+            result.put("username", values[0]);
+            result.put("password", values[1]);
         }
         return result;
     }
 
-    public static ApiClient createClient(Optional<String> ticket, Optional<String> auth, String server) {
+    public static ApiClient createClient(Optional<String> ticket, Optional<String> auth,
+            String server) {
         ApiClient client = new ApiClient();
         client.setConnectTimeout(300000);
         client.setReadTimeout(600000);
@@ -67,33 +64,38 @@ public class Utils {
         return client;
     }
 
-    public static Element getElement(ElementApi apiInstance, String projectId, String refId, String id,
-        String commitId) throws ApiException {
+    public static Element getElement(ElementApi apiInstance, String projectId, String refId,
+            String id,
+            String commitId) throws ApiException {
 
-        return apiInstance.getElement(projectId, refId, id, null, null, commitId).getElements().get(0);
+        return apiInstance.getElement(projectId, refId, id, null, null, commitId).getElements()
+                .get(0);
     }
 
-    public static List<Element> getElements(ElementApi apiInstance, String projectId, String refId, List<String> ids, String commitId) throws ApiException {
+    public static List<Element> getElements(ElementApi apiInstance, String projectId, String refId,
+            List<String> ids, String commitId) throws ApiException {
         Elements body = new Elements();
-        for (String id: ids) {
+        for (String id : ids) {
             Element a = new Element();
             a.put("id", id);
             body.addElementsItem(a);
         }
         try {
-            RejectableElements e =  apiInstance.getElementsInBatch(projectId, refId, body, null, null, commitId);
+            RejectableElements e = apiInstance
+                    .getElementsInBatch(projectId, refId, body, null, null, commitId);
             return e.getElements();
         } catch (ApiException e) {
             if (e.getCode() != 404) {
                 throw e;
             }
-            return new ArrayList<Element>();
+            return new ArrayList<>();
         }
     }
 
     public static boolean isPeByType(HashMap<String, ArrayList> instance, String typeID) {
         if (instance.get("classifierIds") != null) {
-            return (instance.get("classifierIds").size() > 0) && (instance.get("classifierIds").get(0).equals(typeID));
+            return (instance.get("classifierIds").size() > 0) && (instance.get("classifierIds")
+                    .get(0).equals(typeID));
         }
         return false;
     }
@@ -105,20 +107,22 @@ public class Utils {
         }
 
         String instanceType = (String) instanceSpec.get("type");
-        if ( instanceType.equals("LiteralString") ) { // If it is a Opaque List, Paragraph, Table, Image, List:
+        if (instanceType
+                .equals("LiteralString")) { // If it is a Opaque List, Paragraph, Table, Image, List:
             if (isPeByType((HashMap) instance, Paragraph_ID)) {
                 return "Paragraph";
-            } else if (isPeByType((HashMap)instance, Image_ID)) {
+            } else if (isPeByType((HashMap) instance, Image_ID)) {
                 return "Image";
-            } else if (isPeByType((HashMap)instance, Table_ID)) {
+            } else if (isPeByType((HashMap) instance, Table_ID)) {
                 return "Table";
-            } else if (isPeByType((HashMap)instance, Equation_ID)) {
+            } else if (isPeByType((HashMap) instance, Equation_ID)) {
                 return "Equation";
-            } else if (isPeByType((HashMap)instance, List_ID)){
+            } else if (isPeByType((HashMap) instance, List_ID)) {
                 return "List";
             }
-        } else if ( instanceType.equals("Expression") ) { // If it is a Opaque Section, or a Expression:
-            if (isPeByType( (HashMap) instance, Section_ID)) {
+        } else if (instanceType
+                .equals("Expression")) { // If it is a Opaque Section, or a Expression:
+            if (isPeByType((HashMap) instance, Section_ID)) {
                 return "Section"; // set const?
             } else {
                 return "Generated"; //What should it do?
@@ -257,26 +261,4 @@ public class Utils {
     public static String createId() {
         return "MMS_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString();
     }
-
-//  PE template
-// INSTANCE_ELEMENT_TEMPLATE = {
-//    appliedStereotypeInstanceId: null,
-//  classifierIds: [],
-//  clientDependencyIds: [],
-//  deploymentIds: [],
-//  documentation: '',
-//  mdExtensionsIds: [],
-//  name: '',
-//  nameExpression: null,
-//  ownerId: null,
-//  slotIds: [],
-//  specification: null,
-//  stereotypedElementId: null,
-//  supplierDependencyIds: [],
-//  syncElementId: null,
-//  templateParameterId: null,
-//  type: "InstanceSpecification",
-//  visibility: "public",
-//  _appliedStereotypeIds: [],
-//};
 }

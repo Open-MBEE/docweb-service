@@ -19,6 +19,7 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openmbee.mms.client.ApiClient;
+import org.openmbee.mms.client.ApiException;
 import org.openmbee.mms.client.api.ElementApi;
 import org.openmbee.mms.client.model.Element;
 import org.openmbee.mms.client.model.Elements;
@@ -35,61 +36,52 @@ public class PresentationController {
 
     private static Logger logger = LogManager.getLogger(PresentationController.class);
 
-
     @Get("/presentation/{presentationId}")
     public HttpResponse<?> getPresentationElement(@Header("Authorization") Optional<String> auth,
-        @QueryValue("alf_ticket") Optional<String> ticket,
-        String projectId, String refId, String presentationId) {
+            @QueryValue("alf_ticket") Optional<String> ticket,
+            String projectId, String refId, String presentationId) throws ApiException {
 
         Map<String, Object> response = new HashMap<>();
-        try {
-            ApiClient client = Utils.createClient(ticket, auth, url);
-            ElementApi apiInstance = new ElementApi();
-            apiInstance.setApiClient(client);
-            Element pe = Utils.getElement(apiInstance, projectId, refId, presentationId, null);
-            List<PresentationElement> responsePE = new ArrayList<>();
-            responsePE.add(Utils.buildResponsePe(pe));
-            response.put("elements", responsePE);
-        } catch (Exception e) {
-            logger.error("Failed: ", e);
-            return HttpResponse.badRequest();
-        }
+        ApiClient client = Utils.createClient(ticket, auth, url);
+        ElementApi apiInstance = new ElementApi();
+        apiInstance.setApiClient(client);
+        Element pe = Utils.getElement(apiInstance, projectId, refId, presentationId, null);
+        List<PresentationElement> responsePE = new ArrayList<>();
+        responsePE.add(Utils.buildResponsePe(pe));
+        response.put("elements", responsePE);
+
         return HttpResponse.ok(response);
     }
 
 
     @Post("/presentations/{presentationId}")
     public HttpResponse<?> postPresentationElement(@Body Presentation request,
-        @Header("Authorization") Optional<String> auth,
-        @QueryValue("alf_ticket") Optional<String> ticket,
-        String projectId, String refId, String presentationId) {
+            @Header("Authorization") Optional<String> auth,
+            @QueryValue("alf_ticket") Optional<String> ticket,
+            String projectId, String refId, String presentationId) throws ApiException {
 
-        try {
-            ApiClient client = Utils.createClient(ticket, auth, url);
-            ElementApi apiInstance = new ElementApi();
-            apiInstance.setApiClient(client);
+        ApiClient client = Utils.createClient(ticket, auth, url);
+        ElementApi apiInstance = new ElementApi();
+        apiInstance.setApiClient(client);
 
-            //    updates Presentation Element with new model
-            PresentationElement pe = request.getElements().get(0);
-            Elements post = new Elements();
-            pe.setId(presentationId);
-            Element e = Utils.createInstanceFromPe(pe, projectId);
-            if (pe.getName() == null ) {
-                e.remove("name");
-            }
-            if (pe.getContent() == null) {
-                e.remove("documentation");
-            }
-            if (pe.getType() == null) {
-                e.remove("specification");
-                e.remove("classifierIds");
-            }
-            post.addElementsItem(e) ;
-            RejectableElements re = apiInstance.postElements(projectId, refId, post);
-        } catch (Exception e) {
-            logger.error("Failed: ", e);
-            return HttpResponse.badRequest();
+        //    updates Presentation Element with new model
+        PresentationElement pe = request.getElements().get(0);
+        Elements post = new Elements();
+        pe.setId(presentationId);
+        Element e = Utils.createInstanceFromPe(pe, projectId);
+        if (pe.getName() == null) {
+            e.remove("name");
         }
+        if (pe.getContent() == null) {
+            e.remove("documentation");
+        }
+        if (pe.getType() == null) {
+            e.remove("specification");
+            e.remove("classifierIds");
+        }
+        post.addElementsItem(e);
+        RejectableElements re = apiInstance.postElements(projectId, refId, post);
+
         return HttpResponse.ok(request);
     }
 
