@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import org.openmbee.mms.client.ApiClient;
 import org.openmbee.mms.client.ApiException;
@@ -28,7 +27,7 @@ public class Utils {
     public static String Paragraph_ID = "_17_0_5_1_407019f_1431903758416_800749_12055";
     public static String Image_ID = "_17_0_5_1_407019f_1431903748021_2367_12034";
     public static String Table_ID = "_17_0_5_1_407019f_1431903724067_825986_11992";
-    public static String Equation_ID = "17_0_5_1_407019f_1431905053808_352752_11992";
+    public static String Equation_ID = "_17_0_5_1_407019f_1431905053808_352752_11992";
     public static String List_ID = "_17_0_5_1_407019f_1431903739087_549326_12013";
 
     public static Map<String, String> getBasicAuth(String authorization) {
@@ -74,7 +73,7 @@ public class Utils {
         return apiInstance.getElement(projectId, refId, id, null, null, commitId).getElements().get(0);
     }
 
-    public static List<Element> getElements(ElementApi apiInstance, String projectId, String refId, Set<String> ids, String commitId) throws ApiException {
+    public static List<Element> getElements(ElementApi apiInstance, String projectId, String refId, List<String> ids, String commitId) throws ApiException {
         Elements body = new Elements();
         for (String id: ids) {
             Element a = new Element();
@@ -104,11 +103,9 @@ public class Utils {
         if (instanceSpec == null) {
             return null;
         }
+
         String instanceType = (String) instanceSpec.get("type");
-
         if ( instanceType.equals("LiteralString") ) { // If it is a Opaque List, Paragraph, Table, Image, List:
-            Object jsonString = instanceSpec.get("value");
-
             if (isPeByType((HashMap) instance, Paragraph_ID)) {
                 return "Paragraph";
             } else if (isPeByType((HashMap)instance, Image_ID)) {
@@ -143,32 +140,34 @@ public class Utils {
 
     public static Element createInstanceFromPe(PresentationElement pe, String projectId) {
         String id = pe.getId() == null ? "_hidden_" + createId() + "_pei" : pe.getId();
-        pe.setType(pe.getType() == null ? "Paragraph" : pe.getType());
-        pe.setName(pe.getName() == null ? "" : pe.getName());
-        pe.setContent(pe.getContent() == null ? "" : pe.getContent());
         pe.setId(id);
+        PresentationElement newPE = new PresentationElement();
+        newPE.setType(pe.getType() == null ? "Paragraph" : pe.getType());
+        newPE.setName(pe.getName() == null ? "" : pe.getName());
+        newPE.setContent(pe.getContent() == null ? "" : pe.getContent());
+        newPE.setId(id);
 
         Map<String, Object> valueSpec = createValueSpec();
         valueSpec.put("ownerId", id);
-        if ("Section".equals(pe.getType())) {
+        if ("Section".equals(newPE.getType())) {
             valueSpec.put("type", "Expression");
             valueSpec.put("operand", new ArrayList());
         } else {
             valueSpec.put("type", "LiteralString");
-            valueSpec.put("value", createSpecForPe(pe, id));
+            valueSpec.put("value", createSpecForPe(newPE, id));
         }
 
         List<String> classifierIds = new ArrayList<>();
-        classifierIds.add(getClassifierId(pe));
+        classifierIds.add(getClassifierId(newPE));
 
         Element e = new Element();
         e.put("appliedStereotypeInstanceId", null);
         e.put("classifierIds", classifierIds);
         e.put("clientDependencyIds", new ArrayList());
         e.put("deploymentIds", new ArrayList());
-        e.put("documentation", pe.getContent());
+        e.put("documentation", newPE.getContent());
         e.put("mdExtensionIds", new ArrayList());
-        e.put("name", pe.getName());
+        e.put("name", newPE.getName());
         e.put("nameExpression", null);
         e.put("ownerId", "view_instances_bin_" + projectId);
         e.put("slotIds", new ArrayList());

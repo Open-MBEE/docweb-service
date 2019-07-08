@@ -1,3 +1,5 @@
 micronaut:
   application:
     name: docweb
+jackson:
+  serializationInclusion: ALWAYS
