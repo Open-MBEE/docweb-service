@@ -1,8 +1,8 @@
-package gov.nasa.jpl.mbee.controllers;
+package org.openmbee.docweb.controllers;
 
-import gov.nasa.jpl.mbee.domains.Presentation;
-import gov.nasa.jpl.mbee.domains.PresentationElement;
-import gov.nasa.jpl.mbee.services.Utils;
+import org.openmbee.docweb.domains.Presentation;
+import org.openmbee.docweb.domains.PresentationElement;
+import org.openmbee.docweb.services.Utils;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
@@ -84,5 +84,4 @@ public class PresentationController {
 
         return HttpResponse.ok(request);
     }
-
 }

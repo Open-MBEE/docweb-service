@@ -1,4 +1,4 @@
-package gov.nasa.jpl.mbee.domains;
+package org.openmbee.docweb.domains;
 
 /**
  * @author shakeh

@@ -1,4 +1,4 @@
-package gov.nasa.jpl.mbee.exceptions;
+package org.openmbee.docweb.exceptions;
 
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;

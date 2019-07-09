@@ -1,4 +1,4 @@
-package gov.nasa.jpl.mbee;
+package org.openmbee.docweb;
 
 import io.micronaut.runtime.Micronaut;
 

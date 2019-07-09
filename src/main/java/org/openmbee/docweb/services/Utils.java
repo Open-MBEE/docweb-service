@@ -1,8 +1,8 @@
-package gov.nasa.jpl.mbee.services;
+package org.openmbee.docweb.services;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
-import gov.nasa.jpl.mbee.domains.PresentationElement;
+import org.openmbee.docweb.domains.PresentationElement;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -92,7 +92,7 @@ public class Utils {
         }
     }
 
-    public static boolean isPeByType(HashMap<String, ArrayList> instance, String typeID) {
+    public static boolean isPeByType(Map<String, ArrayList> instance, String typeID) {
         if (instance.get("classifierIds") != null) {
             return (instance.get("classifierIds").size() > 0) && (instance.get("classifierIds")
                     .get(0).equals(typeID));
@@ -101,7 +101,7 @@ public class Utils {
     }
 
     public static String getPresentationElementType(Element instance) {
-        LinkedTreeMap instanceSpec = (LinkedTreeMap) instance.get("specification");
+        Map instanceSpec = (Map) instance.get("specification");
         if (instanceSpec == null) {
             return null;
         }
@@ -109,20 +109,20 @@ public class Utils {
         String instanceType = (String) instanceSpec.get("type");
         if (instanceType
                 .equals("LiteralString")) { // If it is a Opaque List, Paragraph, Table, Image, List:
-            if (isPeByType((HashMap) instance, Paragraph_ID)) {
+            if (isPeByType((Map) instance, Paragraph_ID)) {
                 return "Paragraph";
-            } else if (isPeByType((HashMap) instance, Image_ID)) {
+            } else if (isPeByType((Map) instance, Image_ID)) {
                 return "Image";
-            } else if (isPeByType((HashMap) instance, Table_ID)) {
+            } else if (isPeByType((Map) instance, Table_ID)) {
                 return "Table";
-            } else if (isPeByType((HashMap) instance, Equation_ID)) {
+            } else if (isPeByType((Map) instance, Equation_ID)) {
                 return "Equation";
-            } else if (isPeByType((HashMap) instance, List_ID)) {
+            } else if (isPeByType((Map) instance, List_ID)) {
                 return "List";
             }
         } else if (instanceType
                 .equals("Expression")) { // If it is a Opaque Section, or a Expression:
-            if (isPeByType((HashMap) instance, Section_ID)) {
+            if (isPeByType((Map) instance, Section_ID)) {
                 return "Section"; // set const?
             } else {
                 return "Generated"; //What should it do?
