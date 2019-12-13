@@ -1,10 +1,10 @@
 package org.openmbee.docweb.controllers;
 
-import org.openmbee.docweb.domains.Presentation;
+import io.swagger.v3.oas.annotations.Parameter;
+import org.openmbee.docweb.domains.Presentations;
 import org.openmbee.docweb.domains.PresentationElement;
 import org.openmbee.docweb.services.Utils;
 import io.micronaut.context.annotation.Value;
-import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
@@ -12,9 +12,7 @@ import io.micronaut.http.annotation.Header;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.QueryValue;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,27 +35,25 @@ public class PresentationController {
     private static Logger logger = LogManager.getLogger(PresentationController.class);
 
     @Get("/presentation/{presentationId}")
-    public HttpResponse<?> getPresentationElement(@Header("Authorization") Optional<String> auth,
-            @QueryValue("alf_ticket") Optional<String> ticket,
+    public Presentations getPresentationElement(
+            @Parameter(hidden = true) @Header("Authorization") Optional<String> auth,
+            @Parameter(hidden = true) @QueryValue("alf_ticket") Optional<String> ticket,
             String projectId, String refId, String presentationId) throws ApiException {
-
-        Map<String, Object> response = new HashMap<>();
+        Presentations response = new Presentations();
         ApiClient client = Utils.createClient(ticket, auth, url);
         ElementApi apiInstance = new ElementApi();
         apiInstance.setApiClient(client);
         Element pe = Utils.getElement(apiInstance, projectId, refId, presentationId, null);
         List<PresentationElement> responsePE = new ArrayList<>();
         responsePE.add(Utils.buildResponsePe(pe));
-        response.put("elements", responsePE);
-
-        return HttpResponse.ok(response);
+        response.setElements(responsePE);
+        return response;
     }
 
-
     @Post("/presentations/{presentationId}")
-    public HttpResponse<?> postPresentationElement(@Body Presentation request,
-            @Header("Authorization") Optional<String> auth,
-            @QueryValue("alf_ticket") Optional<String> ticket,
+    public Presentations createOrUpdatePresentationElement(@Body Presentations request,
+            @Parameter(hidden = true) @Header("Authorization") Optional<String> auth,
+            @Parameter(hidden = true) @QueryValue("alf_ticket") Optional<String> ticket,
             String projectId, String refId, String presentationId) throws ApiException {
 
         ApiClient client = Utils.createClient(ticket, auth, url);
@@ -82,6 +78,6 @@ public class PresentationController {
         post.addElementsItem(e);
         RejectableElements re = apiInstance.postElements(projectId, refId, post);
 
-        return HttpResponse.ok(request);
+        return request;
     }
 }

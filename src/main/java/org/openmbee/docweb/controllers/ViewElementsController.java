@@ -1,11 +1,12 @@
 package org.openmbee.docweb.controllers;
 
-import org.openmbee.docweb.domains.Presentation;
+import io.swagger.v3.oas.annotations.Parameter;
+import java.util.Arrays;
+import org.openmbee.docweb.domains.Presentations;
 import org.openmbee.docweb.domains.PresentationElement;
 import org.openmbee.docweb.services.Utils;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.MutableHttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Delete;
@@ -40,14 +41,14 @@ public class ViewElementsController {
 
     private static Logger logger = LogManager.getLogger(PresentationController.class);
 
-
     @Get("/presentations")
-    public MutableHttpResponse<Object> getPresentationElements(@Header("Authorization")
-            Optional<String> auth, String projectId, String refId, String viewId,
-            @QueryValue("alf_ticket") Optional<String> ticket) throws ApiException {
+    public Presentations getPresentationElements(
+            @Parameter(hidden = true) @Header("Authorization") Optional<String> auth,
+            @Parameter(hidden = true) @QueryValue("alf_ticket") Optional<String> ticket,
+            String projectId, String refId, String viewId) throws ApiException {
         logger.info(url);
 //    Get all presentation elements within view
-        Map<String, Object> response = new HashMap<>();
+        Presentations response = new Presentations();
 
         ApiClient client = Utils.createClient(ticket, auth, url);
         ElementApi apiInstance = new ElementApi();
@@ -57,7 +58,7 @@ public class ViewElementsController {
         List<String> peIds = new ArrayList<>();
         Map contents = (Map) view.get("_contents");
         if (contents.isEmpty()) {
-            response.put("elements", new ArrayList<>());
+            response.setElements(new ArrayList<>());
         } else {
             List<Map> pes = (List) contents.get("operand");
             for (Map pe : pes) {
@@ -72,16 +73,16 @@ public class ViewElementsController {
                 peSortedList[index] = responsePE;
             }
 //            response.put("view", view);
-            response.put("elements", peSortedList);
+            response.setElements(Arrays.asList(peSortedList));
         }
-        return HttpResponse.ok(response);
+        return response;
     }
 
     @Put("/presentations")
-    public HttpResponse<?> putPresentationElement(@Body Presentation request,
-            @Header("Authorization") Optional<String> auth,
+    public Presentations insertPresentationElement(@Body Presentations request,
+            @Parameter(hidden = true) @Header("Authorization") Optional<String> auth,
+            @Parameter(hidden = true) @QueryValue("alf_ticket") Optional<String> ticket,
             @QueryValue("index") Optional<Integer> index,
-            @QueryValue("alf_ticket") Optional<String> ticket,
             String projectId, String refId, String viewId) throws ApiException {
 
         ApiClient client = Utils.createClient(ticket, auth, url);
@@ -113,12 +114,13 @@ public class ViewElementsController {
         post.addElementsItem(postView);
         RejectableElements re = apiInstance.postElements(projectId, refId, post);
 
-        return HttpResponse.ok(request);
+        return request;
     }
 
     @Patch("/presentations/{presentationId}")
-    public HttpResponse<?> patchPresentationElement(@Header("Authorization") Optional<String> auth,
-            @QueryValue("alf_ticket") Optional<String> ticket,
+    public HttpResponse<?> updatePresentationElement(
+            @Parameter(hidden = true) @Header("Authorization") Optional<String> auth,
+            @Parameter(hidden = true) @QueryValue("alf_ticket") Optional<String> ticket,
             @QueryValue("index") Integer index,
             String projectId, String refId, String viewId, String presentationId)
             throws ApiException {
@@ -156,9 +158,9 @@ public class ViewElementsController {
     }
 
     @Delete("/presentations/{presentationId}")
-    public HttpResponse<?> deletePresentationElementfromView(
-            @Header("Authorization") Optional<String> auth,
-            @QueryValue("alf_ticket") Optional<String> ticket,
+    public HttpResponse<?> deletePresentationElementFromView(
+            @Parameter(hidden = true) @Header("Authorization") Optional<String> auth,
+            @Parameter(hidden = true) @QueryValue("alf_ticket") Optional<String> ticket,
             String projectId, String refId, String viewId, String presentationId)
             throws ApiException {
 

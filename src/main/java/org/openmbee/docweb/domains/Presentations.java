@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * @author shakeh
  */
-public class Presentation {
+public class Presentations {
 
     private List<PresentationElement> elements;
 
