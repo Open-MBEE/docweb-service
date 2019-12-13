@@ -1,4 +1,4 @@
-package gov.nasa.jpl.mbee;
+package org.openmbee.docweb;
 
 import com.amazonaws.serverless.exceptions.ContainerInitializationException;
 import com.amazonaws.services.lambda.runtime.Context;

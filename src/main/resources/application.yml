@@ -1,5 +1,8 @@
 micronaut:
   application:
     name: docweb
+  server:
+    cors:
+      enabled: true
 jackson:
   serializationInclusion: ALWAYS
